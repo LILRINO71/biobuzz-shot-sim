@@ -1,5 +1,7 @@
 # BIOBUZZ Shot Sim
 
+**Try it: https://lilrino71.github.io/biobuzz-shot-sim/**
+
 A shot simulator for the **FTC 2026–27 game BIOBUZZ**. Drag a robot anywhere on the field and pick a goBILDA Yellow Jacket motor and flywheel setup. The sim finds the arc that puts POLLEN or NECTAR into your alliance's upward HIVE CELL, then gives exactly one of three answers:
 
 | Verdict | Meaning |
@@ -42,7 +44,7 @@ Main assumptions: C_D and C_L come from pickleball studies; exit efficiency is a
 
 ## Run it
 
-Open `dist/preview.html` in a browser. No install and no server needed.
+Use the live page above, or open `dist/preview.html` (or `docs/index.html`) in a browser. No install and no server needed.
 
 ```bash
 node tools/build.mjs                      # rebuild dist/ from src/ and data/
@@ -65,7 +67,7 @@ src/engine.js           physics, hit test, search, motor model, verdicts (no DOM
 src/worker.js           Web Worker wrapper
 src/app.js              UI: field, side view, 3-D view (three.js r128), readouts, motor table
 src/styles.css, src/markup.html
-tools/build.mjs         builds dist/biobuzz-shot-sim.html (single file) and dist/preview.html
+tools/build.mjs         builds dist/biobuzz-shot-sim.html (single file), dist/preview.html and docs/index.html (GitHub Pages)
 tests/                  node tests, Python oracle and cross-check
 SPEC.md                 full build spec, including decisions made after research
 ```
