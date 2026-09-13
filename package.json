@@ -1,0 +1,13 @@
+{
+  "name": "biobuzz-shot-sim",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shot simulator for the FTC 2026-27 BIOBUZZ HIVE: drag a robot anywhere, pick a goBILDA motor, get POSSIBLE / NOT CONSISTENT / WON'T WORK.",
+  "license": "MIT",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "test": "node --test tests/engine.test.mjs",
+    "crosscheck": "node tests/crosscheck/compare.mjs",
+    "oracle:selftest": "python tests/crosscheck/oracle.py --selftest"
+  }
+}

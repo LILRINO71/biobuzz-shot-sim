@@ -1,0 +1,124 @@
+{
+  "units": "in",
+  "frame": "origin = field centre on the tile top surface; +x toward the BLUE alliance wall (right, seen from the audience); +y away from the audience; +z up; headings from +x counter-clockwise",
+  "field": {
+    "half": 70.5,
+    "wallHeight": 11.6,
+    "tile": 23.5,
+    "tileSeams": [-47, -23.5, 0, 23.5, 47],
+    "wallThickness": 1.0,
+    "wallHeightFromFloor": 12.125,
+    "tileThickness": 0.59,
+    "nominal": { "half": 72, "tile": 24 }
+  },
+  "hive": {
+    "pivotZ": 43.95,
+    "armDeg": 30,
+    "hiveX": { "red": -12.75, "blue": 12.75 },
+    "upSideStart": { "red": -1, "blue": 1 },
+    "cell": {
+      "aIn": 9.42,
+      "aOut": 21.46,
+      "depth": 12.04,
+      "b0": -1.3625,
+      "width": 20,
+      "height": 14,
+      "shoulder": 7.61,
+      "ringThickness": 0.4,
+      "lugBelowBase": 1.6
+    },
+    "lipZ": 53.5,
+    "topZ": 65.6,
+    "swingClearanceWarnZ": 25.5,
+    "armBar": {
+      "radius": 0.8,
+      "ab": [[-21.46, -2.2], [-4.4, -2.2], [-1.5, 0], [1.5, 0], [4.4, -2.2], [21.46, -2.2]]
+    },
+    "frame": {
+      "tubeRadius": 0.6,
+      "legs": [
+        [[-23.9, -18.95, 0], [-12.4, 0, 42.45]],
+        [[-23.9, 18.95, 0], [-12.4, 0, 42.45]],
+        [[23.9, -18.95, 0], [12.4, 0, 42.45]],
+        [[23.9, 18.95, 0], [12.4, 0, 42.45]]
+      ],
+      "crossbar": [[-12.4, 0, 41.8], [12.4, 0, 41.8]],
+      "baseX": 49.46,
+      "baseY": 38.95,
+      "footBars": {
+        "radius": 0.6,
+        "width": 1.46,
+        "segments": [
+          [[-24.0, -19.475, 0.5], [-24.0, 19.475, 0.5]],
+          [[24.0, -19.475, 0.5], [24.0, 19.475, 0.5]]
+        ]
+      },
+      "cornerBlocks": {
+        "radius": 1.0,
+        "segments": [
+          [[-12.4, 0, 41.3], [-12.4, 0, 44.6]],
+          [[12.4, 0, 41.3], [12.4, 0, 44.6]]
+        ]
+      },
+      "logoPanels": {
+        "optional": true,
+        "thickness": 0.25,
+        "quads": [
+          [[-13.9, -1.8, 40.0], [13.9, -1.8, 40.0], [13.9, -4.1, 34.3], [-13.9, -4.1, 34.3]],
+          [[-13.9, 1.8, 40.0], [13.9, 1.8, 40.0], [13.9, 4.1, 34.3], [-13.9, 4.1, 34.3]]
+        ]
+      }
+    },
+    "checks": {
+      "lipUZ": [19.27, 53.50],
+      "topUZ": [12.27, 65.62],
+      "mouthCentroidBOffset": 5.5600,
+      "mouthCentroidUZ": [16.49, 58.32],
+      "upCellMaxU": 20.07,
+      "downCellMaxU": 25.15,
+      "lowestZ": 30.65,
+      "legSlopeDxDz": 0.271,
+      "legSlopeDyDz": 0.446
+    }
+  },
+  "flowers": [
+    { "x": -23.5, "y": 68.2, "wall": "+y", "footprint": 6, "alongWall": 5.9, "depth": 4.8, "openingDia": 4, "openingZ": 21.5, "backstopTopZ": 22.75 },
+    { "x": 68.2, "y": 23.5, "wall": "+x", "footprint": 6, "alongWall": 5.9, "depth": 4.8, "openingDia": 4, "openingZ": 21.5, "backstopTopZ": 22.75 },
+    { "x": 23.5, "y": -68.2, "wall": "-y", "footprint": 6, "alongWall": 5.9, "depth": 4.8, "openingDia": 4, "openingZ": 21.5, "backstopTopZ": 22.75 },
+    { "x": -68.2, "y": -23.5, "wall": "-x", "footprint": 6, "alongWall": 5.9, "depth": 4.8, "openingDia": 4, "openingZ": 21.5, "backstopTopZ": 22.75 }
+  ],
+  "loadingZones": {
+    "red": { "x0": -70.5, "x1": -59.5, "y0": 23.9, "y1": 46.6 },
+    "blue": { "x0": 59.5, "x1": 70.5, "y0": -46.6, "y1": -23.9 }
+  },
+  "gardens": {
+    "red": { "x0": -70.5, "x1": -47.4, "y0": -70.0, "y1": -68.0 },
+    "blue": { "x0": 47.4, "x1": 70.5, "y0": 68.0, "y1": 70.0 }
+  },
+  "allianceAreas": {
+    "red": { "x0": -125.5, "x1": -71.5, "y0": -48.5, "y1": 48.5 },
+    "blue": { "x0": 71.5, "x1": 125.5, "y0": -48.5, "y1": 48.5 }
+  },
+  "notes": [
+    "Field size: am-0481 perimeter is 141 in inside / 143 in outside; FTC Docs measured 3580 mm between inside faces. Manual figures scaled by their own 97 in and 54 in dimensions give 141.4 in inside and a 23.5 in tile pitch; the EFSG top view reproduces HIVE centre-to-centre 25.5 and frame width 49.46 only with a 23.5 in pitch. 144/24 are nominal (manual 9.1: +/-1 in general tolerance). Tile seams at 0, +/-23.5, +/-47; edge tiles trimmed.",
+    "Wall: 12.125 in from floor (am-0481) minus 0.59 in tile = 11.5; FTC Docs 313 mm total minus 13 mm tile = 11.8; 11.6 used (+/-0.2).",
+    "HIVE x: red HIVE on the red (-x) side in every top view; +/-12.75 from the 25.5 centre-to-centre; EFSG top view measures -12.73 / +12.78.",
+    "upSide at match start: red up-CELL on the audience side (sigma -1), blue up-CELL on the far side (sigma +1); agrees with the NECTAR staged in the up-CELLs and with the down-CELL of each HIVE facing the flower on its own side (-23.5,+y wall for red; +23.5,-y wall for blue).",
+    "CELL set is self-consistent: aOut = 18.84/2 + 12.04 = 21.46 (overall 42.92 vs published 42.91); b0 = (53.5 - 43.95 - 21.46*sin30)/cos30 = -1.3625 gives lip z 53.50. topZ 65.62 = lip + 14*cos30, which confirms tilt and 14 in height but not b0 on its own. Fig 9-9 scaled pivot-to-floor gives b0 = -1.45 (+/-0.1). Fig 9-10 side-view CELL corners match the model within 0.7 in.",
+    "The 20 x 14 x 7.61 pentagon is the inner opening; the ring adds ~0.4-0.5 in outside it (outer width 20.8 in top view) and a lug extends 1.6 in below the base at w = 0. Inner corners have ~0.5 in fillets (ignored).",
+    "Lowest down-CELL point is ~30.7 in (lug) / 31.6 in (ring corner); the 25.5 in label in Fig 9-10 does not match its own drawing scale. 25.5 kept only as the swing-clearance warning threshold.",
+    "Arm bar: 1 in square tube centred at b = -2.2 from a = +/-4.4 to +/-21.46 (through the ring lugs), V plates rising to a flat hub |a| <= 1.5 around the pivot. Radius 0.8 covers plates and lugs (b down to -3.0) and its top (-1.4) stays below b0.",
+    "Frame: each triangle leans inward in x (0.271 in per in of height) and its legs converge in y (0.446); leg centrelines meet at z ~42.45 at x = +/-12.4 (~0.35 in inboard of the pivot, within +/-0.5 in); leg base centres (+/-23.9, +/-18.95, 0). Legs ~1 in square tube (radius 0.6). Foot bars centred x = +/-24.0, outer faces at +/-24.73 = 49.46/2. Crossbar joins the top corners at z ~41.8; corner blocks hold the pivot cradles up to ~44.6. Measured from Fig 9-10 front and side views and the EFSG top view; +/-0.5 in.",
+    "Logo panels sit on the outer faces of the leaning legs, z 34.3-40.0, |x| <= 13.9; may be absent at events (manual 9.6.1), so treat as optional obstacles.",
+    "FLOWERs sit at perimeter panel joints, on seam lines +/-23.5 along their wall; opening axis ~2.3 +/- 0.3 in from the wall inner face. Top ring ~5.9 in along the wall x ~4.8 in deep; backstop 1.25 in above the 21.5 in opening.",
+    "LOADING ZONE: 11 +/- 0.125 in deep from the wall; long tape edges run on the inner edge of the tile-seam tabs (~0.4 in inside seams 23.5 and 47), giving ~22.7 in. Red on tile A5, blue on F2.",
+    "GARDEN: 2 in tape on tile A1 (red) / F6 (blue), from the side wall to the inner tab edge of the next seam (~23.1 in); its wall-side edge sits ~0.5 in off the wall on the trimmed tile tabs.",
+    "ALLIANCE AREA: tape inner edges on the outside of seams 1 and 5, outer width ~97 in (y +/-48.5); 54 +/- 1 in deep from the perimeter outer face (x = +/-71.5)."
+  ],
+  "sources": [
+    "https://ftc-resources.firstinspires.org/ftc/game/manual - Competition Manual V1: 9.1, 9.2, 9.3 Fig 9-2 and 9-3, 9.4 Fig 9-4 and 9-5, 9.5 Fig 9-6, 9.6.1 Fig 9-7 and 9-8, 9.6.2 Fig 9-9, 9-10, 9-11, 9.7 Fig 9-12, 10.3.1 Fig 10-2",
+    "https://ftc-resources.firstinspires.org/ftc/archive/2027/field/eventfieldguide - Event Field Setup Guide V1.0: 7.2-7.5, 8.3-8.5, 9.1-9.4, 10.1-10.3, 11.1 (HIVE top view with tile seams)",
+    "https://andymark.com/products/first-tech-challenge-perimeter-kit - am-0481 height 12.125 in, inside 11 ft 9 in, outside 11 ft 11 in (vendor listing)",
+    "https://ftc-docs.firstinspires.org/en/latest/game_specific_resources/field_coordinate_system/field-coordinate-system.html - 3580 mm between inside faces, 313 mm perimeter height, 13 mm tiles (2016 field measurement)"
+  ]
+}

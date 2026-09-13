@@ -1,0 +1,309 @@
+{
+  "version": "2026-09-12",
+  "wheels": [
+    {
+      "id": "gecko96",
+      "label": "goBILDA 96 mm Gecko",
+      "sku": "3613-0014-0096",
+      "diameterMm": 96,
+      "massG": 105,
+      "inertiaModel": "disc k=0.50",
+      "inertiaKgM2": 0.000121,
+      "url": "https://www.gobilda.com/gripforce-gecko-wheel-14mm-bore-96mm-diameter/"
+    },
+    {
+      "id": "gecko72",
+      "label": "goBILDA 72 mm Gecko",
+      "sku": "3613-0014-0072",
+      "diameterMm": 72,
+      "massG": 52,
+      "inertiaModel": "disc k=0.50",
+      "inertiaKgM2": 3.37e-05,
+      "url": "https://www.gobilda.com/gripforce-gecko-wheel-14mm-bore-72mm-diameter-30a-durometer/"
+    },
+    {
+      "id": "hogback96",
+      "label": "goBILDA 96 mm Hogback Traction",
+      "sku": "3626-0014-0096",
+      "diameterMm": 96,
+      "massG": 82,
+      "inertiaModel": "rim-weighted k=0.60",
+      "inertiaKgM2": 0.000113,
+      "url": "https://www.gobilda.com/hogback-traction-wheel-96mm-diameter-50a-durometer/"
+    },
+    {
+      "id": "hogback72",
+      "label": "goBILDA 72 mm Hogback Traction",
+      "sku": "3626-0014-0072",
+      "diameterMm": 72,
+      "massG": 55,
+      "inertiaModel": "rim-weighted k=0.60",
+      "inertiaKgM2": 4.28e-05,
+      "url": "https://www.gobilda.com/hogback-traction-wheel-72mm-diameter-50a-durometer/"
+    },
+    {
+      "id": "thinrhino96",
+      "label": "goBILDA 96 mm Thin Rhino",
+      "sku": "3612-0014-0096",
+      "diameterMm": 96,
+      "massG": 91,
+      "inertiaModel": "rim-weighted k=0.60",
+      "inertiaKgM2": 0.000126,
+      "url": "https://www.gobilda.com/3612-series-thin-rhino-wheel-14mm-bore-96mm-diameter/"
+    },
+    {
+      "id": "rhino96",
+      "label": "goBILDA 96 mm Rhino (32 mm wide)",
+      "sku": "3601-0014-0096",
+      "diameterMm": 96,
+      "massG": 142,
+      "inertiaModel": "rim-weighted k=0.60",
+      "inertiaKgM2": 0.000196,
+      "url": "https://www.gobilda.com/3601-series-rhino-wheel-14mm-bore-96mm-diameter/"
+    }
+  ],
+  "addOns": [
+    {
+      "id": "steel82",
+      "label": "goBILDA Steel Flywheel 82 mm",
+      "sku": "3628-0032-0082",
+      "diameterMm": 82,
+      "massG": 152,
+      "inertiaKgM2": 0.0001651,
+      "inertiaModel": "published by goBILDA (1651 g·cm²)",
+      "mountsTo": "96 mm Hogback Traction Wheel pattern, or the goBILDA 32 mm square pattern",
+      "url": "https://www.gobilda.com/steel-flywheel-82mm-diameter-152g-1651-g-cm/"
+    },
+    {
+      "id": "steel60",
+      "label": "goBILDA Steel Flywheel 60 mm",
+      "sku": "3628-0014-0060",
+      "diameterMm": 60,
+      "massG": 115,
+      "inertiaKgM2": 5.51e-05,
+      "inertiaModel": "published by goBILDA (551 g·cm²)",
+      "mountsTo": "72 mm Hogback Traction Wheel, or the goBILDA 16 mm / 32 mm square patterns",
+      "url": "https://www.gobilda.com/steel-flywheel-60mm-diameter-115g-551-g-cm/"
+    },
+    {
+      "id": "hubShaft",
+      "label": "Aluminium hub + 8 mm REX shaft (per hub)",
+      "inertiaKgM2": 5e-06,
+      "inertiaModel": "estimate: ~15 g hub at r ≈ 16 mm plus a share of a steel shaft; negligible next to the wheels"
+    }
+  ],
+  "inertiaPresets": [
+    {
+      "id": "light",
+      "label": "1 wheel",
+      "detail": "One 96 mm Gecko + hub + shaft: 1.21e-4 + 0.05e-4 ≈ 1.3e-4 kg·m²",
+      "inertiaKgM2": 0.00013
+    },
+    {
+      "id": "medium",
+      "label": "2 wheels + steel flywheel",
+      "detail": "Two 96 mm Geckos + one 82 mm goBILDA Steel Flywheel + hubs: 2 × 1.21e-4 + 1.65e-4 + 0.1e-4 ≈ 4.2e-4, rounded to 4.0e-4 kg·m² (the SPEC §9 reference inertia; within the ±25 % wheel estimate)",
+      "inertiaKgM2": 0.0004
+    },
+    {
+      "id": "heavy",
+      "label": "2 wheels + 3 steel flywheels",
+      "detail": "Two 96 mm Geckos + three 82 mm goBILDA Steel Flywheels + hubs: 2 × 1.21e-4 + 3 × 1.65e-4 + 0.1e-4 ≈ 7.5e-4 kg·m²",
+      "inertiaKgM2": 0.00075
+    }
+  ],
+  "model": {
+    "etaSingle": 0.45,
+    "etaDual": 0.9,
+    "lossFactor": 2.0,
+    "sigmaMotor": {
+      "h1": 0.8,
+      "h2": 0.95,
+      "s0": 0.005,
+      "s1": 0.03,
+      "s2": 0.06
+    },
+    "downgradeHeadroom": 0.92,
+    "thresholds": {
+      "possible": 0.8,
+      "notConsistent": 0.4
+    },
+    "freeSpeedFactor": 0.97,
+    "etaSingleRange": [
+      0.3,
+      0.5
+    ],
+    "etaDualRange": [
+      0.8,
+      0.95
+    ]
+  },
+  "uncertainty": {
+    "etaSingle": [
+      0.3,
+      0.5
+    ],
+    "etaDual": [
+      0.75,
+      1.0
+    ],
+    "lossFactor": [
+      2.0,
+      3.5
+    ],
+    "wheelInertiaPct": 25
+  },
+  "precision": {
+    "dialed": {
+      "label": "Dialed-in",
+      "sigThetaDeg": 0.5,
+      "sigYawDeg": 0.5,
+      "sigShooter": 0.01
+    },
+    "typical": {
+      "label": "Typical",
+      "sigThetaDeg": 1.0,
+      "sigYawDeg": 1.0,
+      "sigShooter": 0.015
+    },
+    "rough": {
+      "label": "Rough",
+      "sigThetaDeg": 2.0,
+      "sigYawDeg": 2.0,
+      "sigShooter": 0.03
+    }
+  },
+  "defaults": {
+    "type": "single",
+    "wheelId": "gecko96",
+    "motorsPerWheel": 1,
+    "gear": 1,
+    "topRatio": 0.6,
+    "inertiaPreset": "medium",
+    "shotInterval": 0.5,
+    "h0": 16,
+    "precision": "typical",
+    "motorFreeRpm": 6000
+  },
+  "notes": [
+    "Wheel inertia: I = k·m·r² with r = D/2 and m from goBILDA's spec table. Gecko wheels (silicone spokes and tread on a small plastic core) use the solid-disc value k = 0.5, which is slightly conservative. Hogback and Rhino wheels (rigid plastic core with a rubber tread band at the rim) use a rim-weighted k = 0.6. For comparison, goBILDA's published steel flywheel values work out to k = 0.53 (60 mm) and k = 0.65 (82 mm). Treat the wheel values as ±25 %.",
+    "Inertia on one shaft adds up: wheels + hubs + steel discs. An inertia wheel geared to spin g times faster than the shooter wheel counts as g²·I. Hubs and the 8 mm REX shaft add about 5e-6 kg·m² each. goBILDA does not publish motor rotor inertia, so it is left out; it is small next to these presets.",
+    "Inertia presets are per wheel shaft. Two 96 mm wheels plus hubs alone come to only about 2.5e-4 kg·m². Reaching the ≈4e-4 default takes one 82 mm steel flywheel, so the medium label says that. goBILDA lists this flywheel as a related product for its DECODE Starter Bot, and its product page describes it as a way to add rotational inertia to launcher systems.",
+    "15A-durometer GripForce Gecko variants weigh about the same (96 mm 15A: 102 g), so they can reuse the 30A entries.",
+    "etaSingle 0.45 (kept). In no-slip theory the ball rolls on the fixed hood, so its centre leaves at 0.5 × the wheel's surface speed at the moment of exit (Brettle 2023; Team 449, 2026). The wheel also slows during the shot. Measured against the pre-shot set speed, the ideal ratio for POLLEN is 0.47 at I = 4e-4 and 0.42 at I = 1.3e-4. FRC teams shooting squishy foam balls report lower values: 30 % was standard in one team's prototypes, and 20–45 % is a typical guess (Chief Delphi, 2021). A tennis-ball test posted in 2026 reached about 56 % of the ideal kinetic energy, which is about 0.37 of surface speed. So 0.45 is the optimistic end. It fits a stiff hollow ball on a soft 30A wheel with light compression. Calibrate it with slow-motion video. At 0.35, every required wheel rpm goes up by 29 %.",
+    "etaDual 0.90 (kept). In the ideal model, a ball squeezed between two counter-rotating wheels leaves at the average of their two surface speeds (Team 449 dual-flywheel model, as used in ReCalc; Chief Delphi, 2021). Counting the wheels slowing during contact, the ideal is about 0.91 at a combined 4e-4 kg·m² and 0.95 at 7.5e-4. Slip and compression losses pull real shooters lower; 0.75–0.90 is plausible.",
+    "lossFactor 2.0 (kept). In the no-slip impulse model the wheel loses twice the ball's translational + rotational kinetic energy in the high-inertia limit, for both the single-wheel hood and the dual-wheel case, so efficiency is at most 50 % (Brettle 2023). The value computed for POLLEN at I = 4e-4 is 2.06. Real slip only adds loss, so 2.0 is a floor; 2–3.5 is plausible.",
+    "Spin: single hood S0 = 1 (the ball rolls on the hood, so ω·r = v). Dual S0 = (1 − k)/(1 + k), which matches the Team 449 relations v = (v1 + v2)/2 and ω·r = (v1 − v2)/2. The default topRatio 0.6 gives S0 = 0.25.",
+    "Headroom (sigmaMotor knees 0.80 / 0.95 and downgradeHeadroom 0.92, kept) matches common practice. Size the shooter so the shot speed is reachable at about 8 V of a 12 V battery (Chief Delphi, 2016). Set the target at the speed the wheel reaches with about 10 V applied, roughly 0.74–0.80 of full-battery free speed (FTC DECODE shooter blog, 2025). Leave 10–30 % headroom above the on-shot speed (YETI wiki).",
+    "DECODE (2025-26) sanity check. Fixed ~58–60° DECODE shooters needed about 4.4–6.9 m/s to score the 5 in, 0.165 lb perforated ARTIFACT balls. At etaSingle 0.45 on a 96 mm wheel, that is about 1,930–3,050 wheel rpm, or 32–51 % of a 6000 rpm motor at G = 1. goBILDA's DECODE Starter Bot sample code holds its single high-speed launcher motor (driving two launcher wheels) at 1,125 encoder counts/s for close shots. If that motor is the 28-count 6000 rpm Yellow Jacket, that is about 2,410 rpm, or 40 % of free speed. The BIOBUZZ POLLEN reference shot (5.05 m/s → about 2,230 wheel rpm, h ≈ 0.37 on a 96 mm hood) sits in the same range.",
+    "SPEC §9 motor check with these values: 6000 rpm motor, 96 mm wheel, single hood, 5.05 m/s exit → 2,233 wheel rpm, h = 0.372. With I = 4.0e-4 (medium preset), POLLEN dip = 4.87 %.",
+    "No external data backs sigmaMotor, the verdict thresholds or the precision presets. They are SPEC design choices and are carried over unchanged.",
+    "freeSpeedFactor 0.97: goBILDA lists the bare 1:1 motor at 6000 rpm theoretical and 5800 rpm tested; usable free speed = freeRpm x 0.97."
+  ],
+  "sources": [
+    {
+      "title": "goBILDA GripForce Gecko Wheel, 14 mm bore, 96 mm (SKU 3613-0014-0096): 105 g, silicone rubber on plastic core, 30A",
+      "url": "https://www.gobilda.com/gripforce-gecko-wheel-14mm-bore-96mm-diameter/"
+    },
+    {
+      "title": "ServoCity mirror of the same 96 mm Gecko listing (105 g)",
+      "url": "https://www.servocity.com/3613-series-gecko-wheel-14mm-bore-96mm-diameter/"
+    },
+    {
+      "title": "goBILDA GripForce Gecko Wheel, 14 mm bore, 72 mm, 30A (SKU 3613-0014-0072): 52 g",
+      "url": "https://www.gobilda.com/gripforce-gecko-wheel-14mm-bore-72mm-diameter-30a-durometer/"
+    },
+    {
+      "title": "goBILDA GripForce Gecko Wheel, 14 mm bore, 96 mm, 15A (SKU 3632-0014-0096): 102 g",
+      "url": "https://www.gobilda.com/gripforce-gecko-wheel-14mm-bore-96mm-diameter-15a-durometer/"
+    },
+    {
+      "title": "goBILDA GripForce Gecko Wheels category (all sizes and durometers)",
+      "url": "https://www.gobilda.com/gecko-wheels"
+    },
+    {
+      "title": "goBILDA Hogback Traction Wheel 96 mm, 50A (SKU 3626-0014-0096): 82 g",
+      "url": "https://www.gobilda.com/hogback-traction-wheel-96mm-diameter-50a-durometer/"
+    },
+    {
+      "title": "goBILDA Hogback Traction Wheel 72 mm, 50A (SKU 3626-0014-0072): 55 g",
+      "url": "https://www.gobilda.com/hogback-traction-wheel-72mm-diameter-50a-durometer/"
+    },
+    {
+      "title": "goBILDA 3601 Series Rhino Wheel 96 mm (SKU 3601-0014-0096): 142 g, 32 mm wide",
+      "url": "https://www.gobilda.com/3601-series-rhino-wheel-14mm-bore-96mm-diameter/"
+    },
+    {
+      "title": "goBILDA 3612 Series Thin Rhino Wheel 96 mm (SKU 3612-0014-0096): 91 g",
+      "url": "https://www.gobilda.com/3612-series-thin-rhino-wheel-14mm-bore-96mm-diameter/"
+    },
+    {
+      "title": "goBILDA Steel Flywheel 82 mm (SKU 3628-0032-0082): 152 g, 1651 g·cm²",
+      "url": "https://www.gobilda.com/steel-flywheel-82mm-diameter-152g-1651-g-cm/"
+    },
+    {
+      "title": "goBILDA Steel Flywheel 60 mm (SKU 3628-0014-0060): 115 g, 551 g·cm²",
+      "url": "https://www.gobilda.com/steel-flywheel-60mm-diameter-115g-551-g-cm/"
+    },
+    {
+      "title": "goBILDA Flywheels category",
+      "url": "https://www.gobilda.com/flywheels/"
+    },
+    {
+      "title": "goBILDA FTC Starter Bot Resource Guide (DECODE), which lists the 82 mm Steel Flywheel as a related product",
+      "url": "https://www.gobilda.com/ftc-starter-bot-resource-guide-decode/"
+    },
+    {
+      "title": "DECODE StarterBotTeleop sample (FIRST / goBILDA, 2025), team copy: LAUNCHER_TARGET_VELOCITY = 1125",
+      "url": "https://github.com/InventorProgram/RamazRoboticsFTC/blob/master/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/StarterBotTeleop.java"
+    },
+    {
+      "title": "D. Brettle (FRC 199), Flywheel Shooter Analysis: no-slip hooded model, exit = half surface speed, efficiency < 50 %",
+      "url": "https://docs.carlmontrobotics.org/jupyter_notebooks/files/FlywheelShooter.html"
+    },
+    {
+      "title": "Chief Delphi: New Flywheel Shooter Analysis (2023), with the author's design guidance ω_wf = 2·v_p/r_w",
+      "url": "https://www.chiefdelphi.com/t/new-flywheel-shooter-analysis/439111"
+    },
+    {
+      "title": "R. Pedersen (FRC 449), Flywheel Shot Analysis: Correction and Extension (May 2026), dual-flywheel and corrected hooded models",
+      "url": "https://robot.mbhs.edu/media/whitepapers/2026/flywheel-calculations-latest.pdf"
+    },
+    {
+      "title": "Chief Delphi: Flywheel Shot Analysis: Correction and Extension (2026), including the tennis-ball kinetic-energy test",
+      "url": "https://www.chiefdelphi.com/t/flywheel-shot-analysis-correction-and-extension/520270"
+    },
+    {
+      "title": "ReCalc ballShot.ts, the implementation of the Team 449 single-hooded and dual-shooter equations",
+      "url": "https://github.com/tervay/recalc/blob/main/app/lib/math/ballShot.ts"
+    },
+    {
+      "title": "Chief Delphi: Determine flywheel velocity for ball exit velocity (2021): hood ≈ 1/2, opposed wheels ≈ surface speed, measured 20–45 % and 30 %",
+      "url": "https://www.chiefdelphi.com/t/determine-flywheel-velocity-for-ball-exit-velocity/394940"
+    },
+    {
+      "title": "Chief Delphi: Converting shot speed to shooter's wheel speed (2026)",
+      "url": "https://www.chiefdelphi.com/t/converting-shot-speed-to-shooters-wheel-speed/513649"
+    },
+    {
+      "title": "Chief Delphi: Flywheel Shooter Speed (2016): closed-loop voltage headroom",
+      "url": "https://www.chiefdelphi.com/t/flywheel-shooter-speed/146808"
+    },
+    {
+      "title": "YETI Robotics wiki, Shooter Designs: add mass for velocity hold-up, 10–30 % headroom",
+      "url": "https://wiki.yetirobotics.org/books/design-process/page/shooter-designs"
+    },
+    {
+      "title": "N. Vikramaditya, Programming a DECODE shooter (2025): 4.36 / 5.8 / 6.9 m/s launch speeds",
+      "url": "https://medium.com/@vikramaditya.nishant/programming-a-decode-shooter-4ab114dac01f"
+    },
+    {
+      "title": "N. Vikramaditya, Programming a hooded DECODE shooter (2025): target set at ~10 V",
+      "url": "https://medium.com/@vikramaditya.nishant/programming-a-hooded-decode-shooter-463d6a71832f"
+    },
+    {
+      "title": "AndyMark DECODE game pieces: ARTIFACT 5 in diameter, 0.165 lb",
+      "url": "https://andymark.com/products/ftc-25-26-am-3376a"
+    }
+  ]
+}

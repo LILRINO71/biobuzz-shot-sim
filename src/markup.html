@@ -1,0 +1,208 @@
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 34 34" aria-hidden="true">
+        <path d="M17 2.5 29.6 9.75v14.5L17 31.5 4.4 24.25V9.75Z" fill="var(--pollen)" stroke="var(--ink)" stroke-width="1.5"/>
+        <path d="M9 23c3-9 12-13 17-10" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="26" cy="13" r="2.6" fill="var(--ink)"/>
+      </svg>
+      <div>
+        <h1>BIOBUZZ Shot Sim</h1>
+        <p class="sub">FTC 2026–27 · drag the robot, pick a goBILDA motor, see if the HIVE shot works</p>
+      </div>
+    </div>
+    <span class="engine-state" id="engineState">Starting engine…</span>
+  </header>
+
+  <main class="layout">
+    <section class="field-card panel" aria-labelledby="field-h">
+      <div class="card-head">
+        <h2 id="field-h">Field · top view</h2>
+        <div class="toolbar">
+          <span class="scan-progress" id="scanProgress" hidden></span>
+          <button type="button" class="btn" id="scanBtn" aria-pressed="false">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1" fill="currentColor" opacity=".9"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1" fill="currentColor" opacity=".5"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1" fill="currentColor" opacity=".5"/><rect x="9" y="9" width="5.5" height="5.5" rx="1" fill="currentColor" opacity=".25"/></svg>
+            Verdict map
+          </button>
+          <button type="button" class="btn" id="tipBtn">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 9.5A5.5 5.5 0 0 1 12.8 5M13.5 6.5A5.5 5.5 0 0 1 3.2 11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M13.6 2.2v3.3h-3.3M2.4 13.8v-3.3h3.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span id="tipLabel">TIP red HIVE</span>
+          </button>
+        </div>
+      </div>
+      <div class="field-wrap" id="fieldWrap">
+        <canvas id="field" tabindex="0" aria-describedby="fieldHint" aria-label="Field. The robot can be dragged anywhere; arrow keys move it."></canvas>
+      </div>
+      <div class="field-foot">
+        <div class="legend" id="fieldLegend">
+          <span><i class="key-line"></i>Ball path (ground track)</span>
+          <span id="heatLegend" hidden><i class="swatch" style="background:var(--good-mark)"></i>POSSIBLE <i class="swatch" style="background:var(--warn-mark)"></i>NOT CONSISTENT <i class="swatch" style="background:var(--bad-mark)"></i>WON'T WORK</span>
+        </div>
+        <p class="hint" id="fieldHint">Drag or click to move the robot · arrow keys nudge 1 in (Shift: 6 in)</p>
+      </div>
+    </section>
+
+    <aside class="side">
+      <section class="verdict panel" id="verdictPanel" aria-live="polite" aria-atomic="true">
+        <div class="verdict-top">
+          <span class="verdict-badge v-warn" id="verdictBadge">Working…</span>
+          <div class="hit-big"><span class="num" id="hitRate">—</span><span class="label">shots that score</span></div>
+        </div>
+        <div>
+          <div class="rate-bar"><div class="rate-fill" id="rateFill" style="width:0"></div></div>
+          <div class="rate-ticks" aria-hidden="true"><span style="left:0;transform:none">0</span><span style="left:40%">40%</span><span style="left:80%">80%</span><span style="left:100%;transform:translateX(-100%)">100%</span></div>
+        </div>
+        <p class="reason" id="reason">Calculating the best arc…</p>
+        <div class="chips" id="warnings"></div>
+      </section>
+
+      <section class="readout panel" aria-labelledby="arc-h">
+        <h2 id="arc-h">Required arc</h2>
+        <dl class="kv" id="arcReadout"></dl>
+      </section>
+
+      <section class="readout panel" aria-labelledby="motor-h">
+        <h2 id="motor-h">Motor &amp; flywheel</h2>
+        <dl class="kv" id="motorReadout"></dl>
+        <div class="meter" id="headroomMeter">
+          <div class="label" style="margin-bottom:5px">Motor speed used</div>
+          <div class="meter-track"><div class="meter-fill" id="meterFill" style="width:0"></div><i class="meter-mark" style="left:80%"></i><i class="meter-mark" style="left:92%"></i></div>
+          <div class="meter-labels"><span>0</span><span>80% · 92%</span><span>100% of free speed</span></div>
+        </div>
+      </section>
+
+      <section class="controls panel" aria-label="Settings">
+        <fieldset>
+          <legend>Shot</legend>
+          <div class="ctl"><span class="label" id="ball-l">Ball</span>
+            <div class="seg" role="group" aria-labelledby="ball-l" data-key="ballId">
+              <button type="button" data-v="pollen">Pollen · 2.8 in</button><button type="button" data-v="nectar">Nectar · 3.6 in</button>
+            </div>
+          </div>
+          <div class="ctl"><span class="label" id="target-l">Shooting into</span>
+            <div class="seg" role="group" aria-labelledby="target-l" data-key="target">
+              <button type="button" data-v="red"><i class="dot" style="background:var(--red)"></i>Red HIVE</button><button type="button" data-v="blue"><i class="dot" style="background:var(--blue)"></i>Blue HIVE</button>
+            </div>
+          </div>
+          <div class="ctl"><span class="label" id="up-l">That HIVE's upward CELL</span>
+            <div class="seg" role="group" aria-labelledby="up-l" data-key="upSide">
+              <button type="button" data-v="-1">Audience side</button><button type="button" data-v="1">Far side</button>
+            </div>
+          </div>
+          <label class="ctl"><span class="label">Shooter exit height <output id="h0Out"></output></span>
+            <input type="range" id="h0" min="4" max="29" step="1"></label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Motor &amp; flywheel</legend>
+          <label class="ctl"><span class="label">goBILDA Yellow Jacket motor (8 mm REX)</span>
+            <select id="motor"></select></label>
+          <div class="ctl-row">
+            <div class="ctl"><span class="label" id="mpw-l">Motors per wheel</span>
+              <div class="seg" role="group" aria-labelledby="mpw-l" data-key="motorsPerWheel">
+                <button type="button" data-v="1">1</button><button type="button" data-v="2">2</button>
+              </div>
+            </div>
+            <label class="ctl"><span class="label">Gearing (wheel : motor)</span>
+              <select id="gear">
+                <option value="0.5">1 : 2 (down)</option><option value="0.75">1 : 1.33 (down)</option><option value="1">1 : 1 direct</option>
+                <option value="1.25">1.25 : 1 (up)</option><option value="1.5">1.5 : 1 (up)</option><option value="2">2 : 1 (up)</option>
+                <option value="3">3 : 1 (up)</option><option value="4">4 : 1 (up)</option><option value="5">5 : 1 (up)</option>
+              </select></label>
+          </div>
+          <div class="ctl"><span class="label" id="type-l">Shooter type</span>
+            <div class="seg" role="group" aria-labelledby="type-l" data-key="type">
+              <button type="button" data-v="single">1 wheel + hood</button><button type="button" data-v="dual">Top + bottom wheels</button>
+            </div>
+          </div>
+          <label class="ctl" id="topRatioCtl" hidden><span class="label">Top wheel speed <output id="topOut"></output></span>
+            <input type="range" id="topRatio" min="0" max="1" step="0.05">
+            <span class="help">Bottom wheel is the fast one. Slower top wheel = more backspin; 100% = no spin.</span></label>
+          <div class="ctl-row">
+            <label class="ctl"><span class="label">Wheel</span><select id="wheel"></select></label>
+            <label class="ctl"><span class="label">Flywheel mass</span><select id="inertia"></select></label>
+          </div>
+          <label class="ctl"><span class="label">Time between shots <output id="intervalOut"></output></span>
+            <input type="range" id="interval" min="0.2" max="2" step="0.05"></label>
+          <details class="adv">
+            <summary>Advanced: exit efficiency</summary>
+            <label class="ctl"><span class="label">Ball exit speed ÷ <span id="etaWhat">wheel surface speed</span> <output id="etaOut"></output></span>
+              <input type="range" id="eta" step="0.01"></label>
+            <p class="help" id="etaHelp">A hooded shooter ideally launches at half the wheel's surface speed. Measured shooters land around 0.30–0.45, so lower this if your real shots come out slow.</p>
+          </details>
+        </fieldset>
+
+        <fieldset>
+          <legend>Robot</legend>
+          <div class="ctl"><span class="label" id="prec-l">Robot precision</span>
+            <div class="seg" role="group" aria-labelledby="prec-l" data-key="precision">
+              <button type="button" data-v="dialed">Dialed-in</button><button type="button" data-v="typical">Typical</button><button type="button" data-v="rough">Rough</button>
+            </div>
+            <span class="help" id="precHelp"></span>
+          </div>
+          <div class="ctl-row">
+            <label class="ctl"><span class="label">Robot x (in)</span><input type="number" id="rx" step="0.5"></label>
+            <label class="ctl"><span class="label">Robot y (in)</span><input type="number" id="ry" step="0.5"></label>
+          </div>
+          <p class="help">x runs toward the blue alliance wall, y away from the audience; (0, 0) is the field center under the HIVE.</p>
+        </fieldset>
+      </section>
+    </aside>
+
+    <section class="views panel" aria-labelledby="views-h">
+      <div class="panel-head"><h2 id="views-h">The arc</h2><p id="viewsCaption">Side view along the shot and a 3-D view, both to scale.</p></div>
+      <div class="views-grid">
+        <div class="view">
+          <div class="view-head"><h3>Side view</h3><span class="legend"><span><i class="key-line"></i>Best arc</span><span><i class="key-line" style="border-top-color:var(--ink-3);border-top-width:1.5px"></i>Speed-window edges</span></span></div>
+          <canvas id="side" aria-label="Side view of the recommended arc and the HIVE"></canvas>
+        </div>
+        <div class="view">
+          <div class="view-head"><h3>3-D view</h3><span class="help">Drag to orbit · scroll or pinch to zoom</span></div>
+          <div class="three-host" id="threeHost" aria-label="3-D view of the field, HIVE and ball path"><span class="three-note" id="threeNote"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="motors panel" aria-labelledby="motors-h">
+      <div class="panel-head"><h2 id="motors-h">Every goBILDA Yellow Jacket from this spot</h2><p id="motorsCaption">Same wheel, gearing and shooter. Click a row to use that motor.</p></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Motor</th><th scope="col">Free speed</th><th scope="col">Motor rpm needed</th><th scope="col">Of free speed</th><th scope="col">Gear-up for 80%</th><th scope="col">Recovery</th><th scope="col">Hit rate</th><th scope="col">Verdict</th></tr></thead>
+          <tbody id="motorRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="about panel">
+      <details>
+        <summary>How this works &amp; assumptions</summary>
+        <div class="about-body">
+          <div>
+            <h3>The three verdicts</h3>
+            <ul>
+              <li><b>POSSIBLE</b>: at least 80% of shots score and the motor runs under 92% of its free speed.</li>
+              <li><b>NOT CONSISTENT</b>: 40–80% score, or the motor is near its limit.</li>
+              <li><b>WON'T WORK</b>: no clean arc, the motor can't reach the speed, or under 40% score.</li>
+            </ul>
+            <h3>Ball flight</h3>
+            <p>Each arc is integrated with air drag (C<sub>D</sub> 0.45) and backspin lift (C<sub>L</sub> = 0.2 · min(spin ratio, 1)) measured on 26-hole pickleball-style balls like Pollen and Nectar. The ball has to pass cleanly through the CELL mouth; touching any edge, the frame, another CELL or a wall counts as a miss.</p>
+            <h3>Hit rate</h3>
+            <p>Your robot never shoots perfectly. Each shot is off by random amounts in launch angle, aim and exit speed (the precision setting). Speed scatter also grows when the motor has little headroom or the flywheel hasn't recovered from the last shot. The hit rate is the share of those shots that still score.</p>
+          </div>
+          <div>
+            <h3>Field</h3>
+            <p>HIVE and CELL geometry follows the 2026–27 Competition Manual (§9.6) and the Event Field Setup Guide; the field is the measured 141 in between wall faces. Match start has the red upward CELL on the audience side; every TIP flips it.</p>
+            <h3>Motors &amp; flywheel</h3>
+            <ul>
+              <li>All eleven goBILDA 5203 Yellow Jacket motors (8 mm REX shaft). The 5204 versions with the 80 mm REX shaft have the same specs.</li>
+              <li>Usable free speed is 97% of the listed rpm (goBILDA tests the 1:1 motor at 5,800 of 6,000 rpm).</li>
+              <li>Each shot drains about twice the ball's energy from the flywheel; recovery follows the motor's torque–speed line at full power.</li>
+              <li>Wheel inertia values are estimates (±25%); exit efficiency is adjustable under Advanced.</li>
+            </ul>
+            <p class="help">Unofficial student tool. Not affiliated with FIRST, goBILDA or AndyMark.</p>
+          </div>
+        </div>
+      </details>
+    </section>
+  </main>
+</div>
