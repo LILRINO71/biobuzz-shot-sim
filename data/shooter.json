@@ -136,7 +136,14 @@
     "etaDualRange": [
       0.8,
       0.95
-    ]
+    ],
+    "ratedV": 12,
+    "batteryV": 12.0,
+    "batteryRangeV": [
+      11.0,
+      13.5
+    ],
+    "openLoopSwingV": 1.2
   },
   "uncertainty": {
     "etaSingle": [
@@ -183,7 +190,11 @@
     "shotInterval": 0.5,
     "h0": 16,
     "precision": "typical",
-    "motorFreeRpm": 6000
+    "motorFreeRpm": 6000,
+    "control": "pid",
+    "wheelsPerShaft": 2,
+    "addOn": "steel82",
+    "batteryV": 12.0
   },
   "notes": [
     "Wheel inertia: I = k·m·r² with r = D/2 and m from goBILDA's spec table. Gecko wheels (silicone spokes and tread on a small plastic core) use the solid-disc value k = 0.5, which is slightly conservative. Hogback and Rhino wheels (rigid plastic core with a rubber tread band at the rim) use a rim-weighted k = 0.6. For comparison, goBILDA's published steel flywheel values work out to k = 0.53 (60 mm) and k = 0.65 (82 mm). Treat the wheel values as ±25 %.",
@@ -198,7 +209,8 @@
     "DECODE (2025-26) sanity check. Fixed ~58–60° DECODE shooters needed about 4.4–6.9 m/s to score the 5 in, 0.165 lb perforated ARTIFACT balls. At etaSingle 0.45 on a 96 mm wheel, that is about 1,930–3,050 wheel rpm, or 32–51 % of a 6000 rpm motor at G = 1. goBILDA's DECODE Starter Bot sample code holds its single high-speed launcher motor (driving two launcher wheels) at 1,125 encoder counts/s for close shots. If that motor is the 28-count 6000 rpm Yellow Jacket, that is about 2,410 rpm, or 40 % of free speed. The BIOBUZZ POLLEN reference shot (5.05 m/s → about 2,230 wheel rpm, h ≈ 0.37 on a 96 mm hood) sits in the same range.",
     "SPEC §9 motor check with these values: 6000 rpm motor, 96 mm wheel, single hood, 5.05 m/s exit → 2,233 wheel rpm, h = 0.372. With I = 4.0e-4 (medium preset), POLLEN dip = 4.87 %.",
     "No external data backs sigmaMotor, the verdict thresholds or the precision presets. They are SPEC design choices and are carried over unchanged.",
-    "freeSpeedFactor 0.97: goBILDA lists the bare 1:1 motor at 6000 rpm theoretical and 5800 rpm tested; usable free speed = freeRpm x 0.97."
+    "freeSpeedFactor 0.97: goBILDA lists the bare 1:1 motor at 6000 rpm theoretical and 5800 rpm tested; usable free speed = freeRpm x 0.97.",
+    "Battery: DC motor free speed and stall torque scale with voltage (V/12). PID velocity control can command up to the full battery voltage but never more, so it cannot raise the top speed; it holds the setpoint and recovers at full power. Fixed-power (open-loop) speed follows the battery, assumed to swing 1.2 V over a match."
   ],
   "sources": [
     {

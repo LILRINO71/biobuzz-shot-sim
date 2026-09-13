@@ -54,6 +54,10 @@
         </div>
         <p class="reason" id="reason">Calculating the best arc…</p>
         <div class="chips" id="warnings"></div>
+        <button type="button" class="btn math-btn" id="mathBtn" aria-haspopup="dialog">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 3h11M2.5 13h11M5 5.5 11 8 5 10.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Show the math
+        </button>
       </section>
 
       <section class="readout panel" aria-labelledby="arc-h">
@@ -118,10 +122,21 @@
           <label class="ctl" id="topRatioCtl" hidden><span class="label">Top wheel speed <output id="topOut"></output></span>
             <input type="range" id="topRatio" min="0" max="1" step="0.05">
             <span class="help">Bottom wheel is the fast one. Slower top wheel = more backspin; 100% = no spin.</span></label>
+          <label class="ctl"><span class="label">Wheel</span><select id="wheel"></select></label>
           <div class="ctl-row">
-            <label class="ctl"><span class="label">Wheel</span><select id="wheel"></select></label>
-            <label class="ctl"><span class="label">Flywheel mass</span><select id="inertia"></select></label>
+            <label class="ctl"><span class="label">Wheels per shaft</span>
+              <select id="wheelCount"><option value="1">1 wheel</option><option value="2">2 wheels</option><option value="3">3 wheels</option><option value="4">4 wheels</option></select></label>
+            <label class="ctl"><span class="label">Extra flywheel</span><select id="addOn"></select></label>
           </div>
+          <p class="help" id="inertiaHelp"></p>
+          <div class="ctl"><span class="label" id="ctrl-l">Speed control</span>
+            <div class="seg" role="group" aria-labelledby="ctrl-l" data-key="control">
+              <button type="button" data-v="pid">PID velocity</button><button type="button" data-v="power">Fixed power (no PID)</button>
+            </div>
+          </div>
+          <label class="ctl"><span class="label">Battery voltage under load <output id="battOut"></output></span>
+            <input type="range" id="battery" min="11" max="13.5" step="0.1">
+            <span class="help" id="battHelp">Motor top speed scales with voltage. 12.0 V is the rated value and a safe end-of-match number; a fresh battery holds about 13 V.</span></label>
           <label class="ctl"><span class="label">Time between shots <output id="intervalOut"></output></span>
             <input type="range" id="interval" min="0.2" max="2" step="0.05"></label>
           <details class="adv">
@@ -206,3 +221,14 @@
     </section>
   </main>
 </div>
+
+<dialog class="math-dialog" id="mathDialog" aria-labelledby="math-h">
+  <div class="math-head">
+    <div>
+      <h2 id="math-h">The math behind this verdict</h2>
+      <p class="help" id="mathSub"></p>
+    </div>
+    <button type="button" class="btn" id="mathClose" aria-label="Close the math panel">Close</button>
+  </div>
+  <div class="math-body" id="mathBody"></div>
+</dialog>

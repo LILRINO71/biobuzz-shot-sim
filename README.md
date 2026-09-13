@@ -16,7 +16,9 @@ A shot simulator for the **FTC 2026–27 game BIOBUZZ**. Drag a robot anywhere o
 
 - **Robot anywhere:** drag or click on a to-scale top view of the field (141 in between walls), or type x / y. Arrow keys nudge the robot.
 - **Every goBILDA 5203 Yellow Jacket motor** (8 mm REX shaft), 6000 rpm down to 30 rpm, with a side-by-side table for the current spot. The table shows the gear-up each motor would need.
-- **Shooter setups:** one wheel + hood, or top + bottom wheels with adjustable backspin. Also adjustable: wheel size, gearing, 1 or 2 motors, flywheel mass, time between shots and exit efficiency.
+- **Shooter setups:** one wheel + hood, or top + bottom wheels with adjustable backspin. Also adjustable: goBILDA wheel (diameter and mass), wheels per shaft, a goBILDA steel flywheel, gearing, 1 or 2 motors, time between shots and exit efficiency.
+- **PID vs fixed power, and battery voltage:** PID holds speed and recovers at full power after each shot; fixed power drifts with the battery and creeps back. Battery voltage sets the real top speed for both.
+- **Show the math:** one button opens every formula for the current spot with the numbers plugged in, from exit speed to wheel rpm, motor headroom, flywheel dip and recovery, ball flight, hit rate and verdict, plus a table of what each wheel choice changes.
 - **Verdict map:** colors the whole field by verdict for your current settings.
 - **The required arc:** launch angle, exit speed, aim, apex, time to the CELL and the scoring window, plus a side view and a 3-D view drawn to scale.
 - **TIP button:** the upward CELL flips sides after every TIP, just like in a match.
@@ -35,9 +37,10 @@ A shot simulator for the **FTC 2026–27 game BIOBUZZ**. Drag a robot anywhere o
 
 **Motor and flywheel.**
 - Exit speed is η × wheel surface speed: η = 0.45 for a hooded single wheel, 0.90 × the average for two wheels.
-- Motor headroom is the required rpm ÷ 97% of the listed free speed. goBILDA tests the 1:1 motor at 5,800 of 6,000 rpm.
+- Motor top speed is the listed free speed × 0.97 (goBILDA tests the 1:1 motor at 5,800 of 6,000 rpm) × battery voltage ÷ 12 V. Velocity PID can push the motor up to the battery voltage but never beyond it, so PID doesn't raise this ceiling.
+- Flywheel inertia is wheels × wheel inertia + an optional goBILDA steel flywheel (published inertia) + hubs.
 - Each shot drains 2 × the ball's kinetic energy (linear + spin) from the flywheel.
-- Recovery follows the motor's torque-speed line at full power.
+- With PID, recovery follows the motor's torque-speed line at full power; with fixed power it relaxes back with the same time constant but no boost, and speed also drifts with a 1.2 V battery swing.
 - Low headroom or incomplete recovery between shots adds speed scatter, which lowers the hit rate.
 
 Main assumptions: C_D and C_L come from pickleball studies; exit efficiency is adjustable because real hooded shooters measure 0.30–0.45; wheel inertias are estimates (±25%); field tolerances are ±1 in.

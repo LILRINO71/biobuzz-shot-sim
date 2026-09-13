@@ -340,3 +340,14 @@ Design (follow exactly):
   0.80–0.95.
 - **Flywheel:** wheel and inertia presets from `data/shooter.json`; default inertia preset "medium" (4.0e-4 kg·m²).
 - **Scan API default:** `ShotEngine.scanPoints(6, field.half − 10.5)` → centres −60 … +60.
+
+## 11. Additions (v1.1)
+
+- **Battery voltage** (`shooter.batteryV`, default 12.0, UI 11.0–13.5): usable free speed and stall torque scale with V/12.
+- **Speed control** (`shooter.control`): `pid` keeps the §6 model (full-power recovery, σ_motor(h), 92 % downgrade);
+  `power` = open loop: recovery toward the setpoint with the same τ and no boost (residual = dip·e^(−Δt/τ)),
+  σ_motor = openLoopSwingV / (V·√12), no headroom downgrade. PID never raises the top speed.
+- **Flywheel inertia** from the chosen wheel: wheels-per-shaft × wheel inertia + optional goBILDA steel flywheel(s) + hubs
+  (replaces the fixed inertia presets in the UI).
+- **Show the math** dialog: every formula with this spot's numbers (sections: rpm chain, battery/PID, flywheel,
+  wheel comparison table, flight, hit rate/verdict). `motorModel(...).details` and `ShotEngine.constants()` feed it.

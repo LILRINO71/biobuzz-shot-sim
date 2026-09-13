@@ -116,3 +116,34 @@ test('mirror symmetry: red σ=-1 at (x,y) equals blue σ=+1 at (-x,-y)', () => {
     near(a.hitRate, b.hitRate, 0.02, `hit rate ${x},${y}`);
   }
 });
+
+test('battery voltage sets the top speed; PID does not raise it', () => {
+  const lo = E.motorModel('yj6000', { ...BASE.shooter, batteryV: 12 }, 'pollen', 5.05);
+  const hi = E.motorModel('yj6000', { ...BASE.shooter, batteryV: 13.2 }, 'pollen', 5.05);
+  near(hi.usableFreeRpm / lo.usableFreeRpm, 13.2 / 12, 1e-9, 'free speed scales with voltage');
+  near(hi.vCap / lo.vCap, 13.2 / 12, 1e-9, 'speed cap scales with voltage');
+  const pid = E.motorModel('yj6000', { ...BASE.shooter, control: 'pid' }, 'pollen', 5.05);
+  const pow = E.motorModel('yj6000', { ...BASE.shooter, control: 'power' }, 'pollen', 5.05);
+  assert.equal(pid.usableFreeRpm, pow.usableFreeRpm, 'PID and fixed power share the same ceiling');
+});
+
+test('fixed power recovers slower and scatters more than PID', () => {
+  const sh = { ...BASE.shooter, shotInterval: 0.3 };
+  const pid = E.motorModel('yj6000', { ...sh, control: 'pid' }, 'pollen', 5.05);
+  const pow = E.motorModel('yj6000', { ...sh, control: 'power' }, 'pollen', 5.05);
+  assert.ok(pow.recoveryMs > 10 * pid.recoveryMs, `recovery ${pow.recoveryMs} vs ${pid.recoveryMs}`);
+  assert.ok(pow.residual > pid.residual);
+  assert.ok(pow.sigmaMotor > pid.sigmaMotor);
+  const p = S({ robot: { x: -12.75, y: -30 }, shooter: { shotInterval: 0.3 } });
+  const rPid = E.evaluate({ ...p, shooter: { ...p.shooter, control: 'pid' } }, 'full');
+  const rPow = E.evaluate({ ...p, shooter: { ...p.shooter, control: 'power' } }, 'full');
+  assert.ok(rPow.hitRate < rPid.hitRate, `hit ${rPow.hitRate} vs ${rPid.hitRate}`);
+});
+
+test('heavier flywheel dips less; bigger wheel needs fewer rpm', () => {
+  const light = E.motorModel('yj6000', { ...BASE.shooter, inertiaKgM2: 2e-4 }, 'pollen', 5.05);
+  const heavy = E.motorModel('yj6000', { ...BASE.shooter, inertiaKgM2: 8e-4 }, 'pollen', 5.05);
+  assert.ok(heavy.dip < light.dip && heavy.spinUpMs > light.spinUpMs);
+  const w72 = E.motorModel('yj6000', { ...BASE.shooter, wheelDiameterMm: 72 }, 'pollen', 5.05);
+  near(w72.wheelRpm / E.motorModel('yj6000', BASE.shooter, 'pollen', 5.05).wheelRpm, 96 / 72, 1e-9, 'rpm scales with 1/D');
+});

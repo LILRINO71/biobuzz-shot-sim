@@ -31,15 +31,36 @@
     shooter: {
       type: def.type || 'single', wheelId: wheelById[def.wheelId] ? def.wheelId : SH.wheels[0].id,
       motorsPerWheel: def.motorsPerWheel || 1, gear: def.gear || 1, topRatio: def.topRatio != null ? def.topRatio : 0.6,
-      inertiaPreset: def.inertiaPreset || 'medium', shotInterval: def.shotInterval || 0.5,
+      wheelCount: def.wheelsPerShaft || 2, addOn: def.addOn || 'steel82', shotInterval: def.shotInterval || 0.5,
+      control: def.control || 'pid', batteryV: def.batteryV || (MODEL.batteryV || 12),
       etaSingle: MODEL.etaSingle, etaDual: MODEL.etaDual
     },
     heat: false
   };
 
+
+  // flywheel inertia per shaft: wheels + optional steel flywheel + hubs (data/shooter.json)
+  var addOnById = {};
+  (SH.addOns || []).forEach(function (a) { addOnById[a.id] = a; });
+  var HUB_I = addOnById.hubShaft ? addOnById.hubShaft.inertiaKgM2 : 5e-6;
+  var ADDONS = [{ id: 'none', label: 'None', I: 0, n: 0 }];
+  if (addOnById.steel60) ADDONS.push({ id: 'steel60', label: 'goBILDA 60 mm steel flywheel', I: addOnById.steel60.inertiaKgM2, n: 1, base: 'steel60' });
+  if (addOnById.steel82) {
+    ADDONS.push({ id: 'steel82', label: 'goBILDA 82 mm steel flywheel', I: addOnById.steel82.inertiaKgM2, n: 1, base: 'steel82' });
+    ADDONS.push({ id: 'steel82x2', label: '2 × 82 mm steel flywheels', I: 2 * addOnById.steel82.inertiaKgM2, n: 2, base: 'steel82' });
+  }
+  function sci(x) { return (x * 1e4).toFixed(2) + '×10⁻⁴'; }
+  function flywheelInertia(s, wheelId) {
+    var w = wheelById[wheelId || s.wheelId], n = s.wheelCount || 1;
+    var add = ADDONS.find(function (a) { return a.id === s.addOn; }) || ADDONS[0];
+    var total = n * w.inertiaKgM2 + add.I + n * HUB_I;
+    var text = n + ' × ' + sci(w.inertiaKgM2) + ' wheel' + (add.I ? ' + ' + sci(add.I) + ' steel' : '') + ' + ' + n + ' × ' + sci(HUB_I) + ' hub';
+    return { total: total, wheelI: w.inertiaKgM2, n: n, addOn: add, hub: HUB_I, text: text };
+  }
+
   function params(robot) {
     var pr = SH.precision[state.precision], s = state.shooter;
-    var inert = SH.inertiaPresets.find(function (p) { return p.id === s.inertiaPreset; });
+    var inert = flywheelInertia(s);
     return {
       ballId: state.ballId, target: state.target, hiveState: { red: state.hive.red, blue: state.hive.blue },
       robot: robot || { x: state.robot.x, y: state.robot.y }, h0: state.h0,
@@ -47,8 +68,8 @@
       motorId: state.motorId,
       shooter: {
         type: s.type, wheelDiameterMm: wheelById[s.wheelId].diameterMm, motorsPerWheel: s.motorsPerWheel, gear: s.gear,
-        topRatio: s.topRatio, inertiaKgM2: inert ? inert.inertiaKgM2 : 4e-4, shotInterval: s.shotInterval,
-        etaSingle: s.etaSingle, etaDual: s.etaDual
+        topRatio: s.topRatio, inertiaKgM2: inert.total, shotInterval: s.shotInterval,
+        etaSingle: s.etaSingle, etaDual: s.etaDual, control: s.control, batteryV: s.batteryV
       }
     };
   }
@@ -151,6 +172,7 @@
   }
 
   var backend = null;
+  var mathDialog = $('mathDialog');
 
   // ------------------------------------------------------------------ jobs
   var current = null;          // last applied result
@@ -198,7 +220,7 @@
     renderArc(r, p);
     renderMotor(r, p);
     drawField();
-    if (mode === 'full') { drawSide(); three.update(); }
+    if (mode === 'full') { drawSide(); three.update(); if (mathDialog.open) renderMath(); }
   }
 
   // ------------------------------------------------------------------ verdict + readouts
@@ -294,7 +316,7 @@
     fillKV(dl, [
       { label: 'Wheel speed', value: nf(m.wheelRpm, 0) + ' rpm', small: nf(p.shooter.wheelDiameterMm, 0) + ' mm wheel' },
       { label: 'Motor speed', value: nf(m.motorRpm, 0) + ' rpm', small: 'of ' + nf(m.usableFreeRpm, 0) + ' usable (' + pct(m.headroom) + ')' },
-      { label: 'Dip per shot', value: pct(m.dip, 1), small: isFinite(m.recoveryMs) ? 'back to speed in ' + nf(m.recoveryMs, 0) + ' ms' : 'never recovers' },
+      { label: 'Dip per shot', value: pct(m.dip, 1), small: !isFinite(m.recoveryMs) ? 'never recovers' : (m.control === 'power' ? 'within 1% after ' : 'back to speed in ') + (m.recoveryMs >= 1000 ? nf(m.recoveryMs / 1000, 1) + ' s' : nf(m.recoveryMs, 0) + ' ms') },
       { label: 'Spin-up', value: isFinite(m.spinUpMs) ? nf(m.spinUpMs / 1000, 2) + ' s' : '—', small: 'from a standstill' },
       { label: 'Speed scatter', value: sg.v != null ? '±' + pct(sg.v, 1) : '—',
         small: sg.v != null ? 'shots ' + pct(sg.shooter, 1) + ' · motor ' + pct(sg.motor, 1) + ' · recovery ' + pct(sg.recovery, 1) : '' },
@@ -325,7 +347,7 @@
         row.motorRpm != null ? nf(row.motorRpm, 0) + ' rpm' : '—',
         row.headroom != null ? pct(row.headroom) : '—',
         need == null ? '—' : need <= g + 1e-9 ? 'not needed' : nf(need, 1) + ' : 1',
-        row.recoveryMs != null && isFinite(row.recoveryMs) ? nf(row.recoveryMs, 0) + ' ms' : '—',
+        row.recoveryMs != null && isFinite(row.recoveryMs) && row.headroom <= 1 ? (row.recoveryMs >= 1000 ? nf(row.recoveryMs / 1000, 1) + ' s' : nf(row.recoveryMs, 0) + ' ms') : '—',
         pct(row.hitRate)
       ];
       cells.forEach(function (c) { var td = document.createElement('td'); td.textContent = c; tr.appendChild(td); });
@@ -343,7 +365,7 @@
       tr.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
       body.appendChild(tr);
     });
-    $('motorsCaption').textContent = 'Same wheel (' + nf(wheelById[state.shooter.wheelId].diameterMm, 0) + ' mm), gearing (' + g + ' : 1) and shooter. "Gear-up for 80%" is the wheel : motor ratio that would run the motor at 80% of its free speed. Click a row to use that motor.';
+    $('motorsCaption').textContent = 'Same wheel (' + nf(wheelById[state.shooter.wheelId].diameterMm, 0) + ' mm), gearing (' + g + ' : 1), ' + (state.shooter.control === 'pid' ? 'PID' : 'fixed power') + ' at ' + nf(state.shooter.batteryV, 1) + ' V and shooter. "Gear-up for 80%" is the wheel : motor ratio that would run the motor at 80% of its free speed. Click a row to use that motor.';
   }
 
   // ------------------------------------------------------------------ field view
@@ -964,11 +986,11 @@
     o.textContent = w.label;
     $('wheel').appendChild(o);
   });
-  SH.inertiaPresets.forEach(function (ip) {
+  ADDONS.forEach(function (a) {
     var o = document.createElement('option');
-    o.value = ip.id;
-    o.textContent = ip.label + ' · ' + (ip.inertiaKgM2 * 1e4).toFixed(1) + '×10⁻⁴ kg·m²';
-    $('inertia').appendChild(o);
+    o.value = a.id;
+    o.textContent = a.label;
+    $('addOn').appendChild(o);
   });
 
   function syncControls() {
@@ -980,6 +1002,7 @@
       else if (key === 'motorsPerWheel') val = String(state.shooter.motorsPerWheel);
       else if (key === 'type') val = state.shooter.type;
       else if (key === 'precision') val = state.precision;
+      else if (key === 'control') val = state.shooter.control;
       seg.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-v') === String(val))); });
     });
     $('h0').value = state.h0;
@@ -987,7 +1010,12 @@
     motorSel.value = state.motorId;
     $('gear').value = String(state.shooter.gear);
     $('wheel').value = state.shooter.wheelId;
-    $('inertia').value = state.shooter.inertiaPreset;
+    $('wheelCount').value = String(state.shooter.wheelCount);
+    $('addOn').value = state.shooter.addOn;
+    var fi = flywheelInertia(state.shooter);
+    $('inertiaHelp').textContent = 'Flywheel inertia per shaft: ' + sci(fi.total) + ' kg·m² (' + fi.text + '). Heavier = smaller speed dip per shot but slower spin-up.';
+    $('battery').value = state.shooter.batteryV;
+    $('battOut').textContent = nf(state.shooter.batteryV, 1) + ' V';
     $('interval').value = state.shooter.shotInterval;
     $('intervalOut').textContent = nf(state.shooter.shotInterval, 2) + ' s';
     var dual = state.shooter.type === 'dual';
@@ -1030,6 +1058,7 @@
       else if (key === 'motorsPerWheel') state.shooter.motorsPerWheel = Number(v);
       else if (key === 'type') state.shooter.type = v;
       else if (key === 'precision') state.precision = v;
+      else if (key === 'control') state.shooter.control = v;
       changed();
     });
   });
@@ -1039,7 +1068,9 @@
   $('gear').addEventListener('change', function () { state.shooter.gear = Number(this.value); changed(); });
   $('topRatio').addEventListener('input', function () { state.shooter.topRatio = Number(this.value); changed(); });
   $('wheel').addEventListener('change', function () { state.shooter.wheelId = this.value; changed(); });
-  $('inertia').addEventListener('change', function () { state.shooter.inertiaPreset = this.value; changed(); });
+  $('wheelCount').addEventListener('change', function () { state.shooter.wheelCount = Number(this.value); changed(); });
+  $('addOn').addEventListener('change', function () { state.shooter.addOn = this.value; changed(); });
+  $('battery').addEventListener('input', function () { state.shooter.batteryV = Number(this.value); changed(); });
   $('interval').addEventListener('input', function () { state.shooter.shotInterval = Number(this.value); changed(); });
   $('eta').addEventListener('input', function () {
     if (state.shooter.type === 'dual') state.shooter.etaDual = Number(this.value); else state.shooter.etaSingle = Number(this.value);
@@ -1052,6 +1083,156 @@
       moveRobotTo(x, y, 'key');
     });
   });
+
+  // ------------------------------------------------------------------ show the math
+  function renderMath() {
+    var r = current, p = currentParams, body = $('mathBody');
+    if (!r || !p) return;
+    body.replaceChildren();
+    var C = E.constants(), A = C.aero, bp = E.ballProps(p.ballId);
+    var mo = D.motors.motors.find(function (x) { return x.id === p.motorId; });
+    var s = state.shooter, sh = p.shooter, m = r.motor, dt = m && m.details, b = r.best;
+    var wheel = wheelById[s.wheelId], fi = flywheelInertia(s);
+    var f = function (x, d) { return nf(x, d == null ? 2 : d); };
+    var pid = sh.control === 'pid';
+    $('mathSub').textContent = bp.label + ' from (' + f(p.robot.x, 1) + ', ' + f(p.robot.y, 1) + ') in, leaving the shooter ' + f(p.h0, 0) + ' in up, into the ' +
+      p.target + ' HIVE · ' + mo.label + ' · ' + wheel.label + ' · ' + (pid ? 'PID velocity' : 'fixed power') + ' at ' + f(sh.batteryV, 1) + ' V. Every number below is for this spot.';
+
+    function sec(title, intro) {
+      var el = document.createElement('section');
+      el.className = 'math-sec';
+      var h = document.createElement('h3');
+      h.textContent = title;
+      el.appendChild(h);
+      if (intro) {
+        var pp = document.createElement('p');
+        intro.forEach(function (part) {
+          if (typeof part === 'string') pp.appendChild(document.createTextNode(part));
+          else { var bb = document.createElement('b'); bb.textContent = part.b; pp.appendChild(bb); }
+        });
+        el.appendChild(pp);
+      }
+      body.appendChild(el);
+      return el;
+    }
+    function eq(parent, what, formula, work, result) {
+      var row = document.createElement('div');
+      row.className = 'eq';
+      var a = document.createElement('div'); a.className = 'eq-what'; a.textContent = what;
+      var bF = document.createElement('div'); bF.className = 'eq-f'; bF.textContent = formula;
+      var c = document.createElement('div'); c.className = 'eq-n';
+      if (work) c.appendChild(document.createTextNode(work + (result != null ? ' = ' : '')));
+      if (result != null) { var strong = document.createElement('b'); strong.textContent = result; c.appendChild(strong); }
+      row.appendChild(a); row.appendChild(bF); row.appendChild(c);
+      parent.appendChild(row);
+    }
+    function note(parent, text) { var n = document.createElement('p'); n.className = 'math-note'; n.textContent = text; parent.appendChild(n); }
+    function ms(x) { return !isFinite(x) ? 'never' : x >= 1000 ? f(x / 1000, 2) + ' s' : f(x, 0) + ' ms'; }
+
+    if (!b || !m) {
+      var s0 = sec('No scoring arc from here', [r.reason + '. With no arc there is no exit speed to turn into wheel or motor rpm, so only the ball-flight rules below apply.']);
+      note(s0, 'Turn on the verdict map to find spots where an arc exists.');
+    } else {
+      var v = b.v, dual = dt.type === 'dual';
+
+      var s1 = sec('1 · Exit speed → wheel rpm → motor rpm', ['The shot needs the ball to leave at ', { b: f(v, 2) + ' m/s' }, '. The wheel has to spin faster than that, because the ball only picks up part of the wheel surface speed.']);
+      if (dual) {
+        eq(s1, 'Exit efficiency', 'v_exit = η × (v_bottom + v_top) ÷ 2,  v_top = k × v_bottom', 'η ' + f(dt.etaDual, 2) + ', k ' + f(dt.topRatio, 2) + ' → v_exit = ' + f(dt.exitFactor, 3) + ' × v_bottom');
+        eq(s1, 'Bottom wheel surface speed', 'v_bottom = v_exit ÷ (η(1 + k) ÷ 2)', f(v, 2) + ' ÷ ' + f(dt.exitFactor, 3), f(dt.vWheel, 2) + ' m/s');
+      } else {
+        eq(s1, 'Exit efficiency', 'η = ball exit speed ÷ wheel surface speed', 'set under Advanced (a perfect hood = 0.50)', 'η = ' + f(dt.etaSingle, 2));
+        eq(s1, 'Wheel surface speed', 'v_wheel = v_exit ÷ η', f(v, 2) + ' ÷ ' + f(dt.exitFactor, 2), f(dt.vWheel, 2) + ' m/s');
+      }
+      eq(s1, 'Wheel rpm', 'n_wheel = 60 × v_wheel ÷ (π × D)', '60 × ' + f(dt.vWheel, 2) + ' ÷ (π × ' + f(dt.wheelDiameterM, 3) + ' m)', f(m.wheelRpm, 0) + ' rpm');
+      eq(s1, 'Motor rpm', 'n_motor = n_wheel ÷ G  (G = wheel rpm per motor rpm)', f(m.wheelRpm, 0) + ' ÷ ' + f(dt.gear, 2), f(m.motorRpm, 0) + ' rpm');
+
+      var s2 = sec('2 · How fast the motor can go: battery and PID', pid ?
+        [{ b: 'PID does not add power. ' }, 'A velocity PID can raise the motor voltage up to the battery voltage and no higher, so the top speed is set by the battery: a DC motor spins at a free speed proportional to voltage. What PID buys is holding the set speed as the battery drains, and driving the motor at full power to recover after each shot.'] :
+        [{ b: 'Fixed power, no PID. ' }, 'The motor settles at whatever speed that power level gives on the current battery voltage. As the battery sags the speed drops with it, and after each shot the flywheel only creeps back instead of being driven back at full power.']);
+      eq(s2, 'Usable free speed', 'n_free = listed rpm × 0.97 × (V ÷ 12 V)', f(mo.freeRpm, 0) + ' × ' + f(dt.freeSpeedFactor, 2) + ' × (' + f(sh.batteryV, 1) + ' ÷ 12)', f(m.usableFreeRpm, 0) + ' rpm');
+      eq(s2, 'Speed used', 'h = n_motor ÷ n_free', f(m.motorRpm, 0) + ' ÷ ' + f(m.usableFreeRpm, 0), pct(m.headroom, 1));
+      eq(s2, 'Fastest exit this setup allows', 'v_max = η_exit × n_free × G × π × D ÷ 60', f(dt.exitFactor, 3) + ' × ' + f(m.usableFreeRpm, 0) + ' × ' + f(dt.gear, 2) + ' × π × ' + f(dt.wheelDiameterM, 3) + ' ÷ 60', f(m.vCap, 2) + ' m/s');
+      if (pid) {
+        eq(s2, 'Speed scatter from the motor', 'σ_motor = 0.5% up to h 80% → 3% at 95% → 6% at 100%', 'h = ' + pct(m.headroom, 1), '±' + pct(m.sigmaMotor, 2));
+        note(s2, 'Above 100% the motor cannot reach the speed at all (WON’T WORK). Above 92% a PID has nothing left to fight battery sag, so even a good shot is capped at NOT CONSISTENT.');
+      } else {
+        eq(s2, 'Speed scatter from the battery', 'σ_motor = voltage swing ÷ (V × √12)', f(dt.openLoopSwingV, 1) + ' V ÷ (' + f(sh.batteryV, 1) + ' × 3.46)', '±' + pct(m.sigmaMotor, 2));
+        note(s2, 'Assumes the battery swings about ' + f(dt.openLoopSwingV, 1) + ' V over a match; with nothing correcting it, speed follows voltage one-for-one.');
+      }
+
+      var s3 = sec('3 · Flywheel: speed lost per shot and recovery', ['Each ball takes energy out of the spinning wheel. How much speed that costs depends on the flywheel inertia; how fast it comes back depends on motor torque and on ', { b: pid ? 'PID driving it at full power' : 'fixed power letting it creep back' }, '.']);
+      eq(s3, 'Flywheel inertia', 'I = wheels × I_wheel + steel flywheel + hubs', fi.text, sci(dt.inertiaKgM2) + ' kg·m²');
+      eq(s3, 'Ball energy', 'E_ball = ½ m v² + ½ I_ball ω²,  ω = S × v ÷ r', '½ × ' + f(bp.massKg, 4) + ' kg × ' + f(v, 2) + '² + spin at S ' + f(m.S0, 2) + ' (ω ' + f(dt.spinRadS, 0) + ' rad/s)', f(dt.keLinJ, 3) + ' + ' + f(dt.keRotJ, 3) + ' J');
+      eq(s3, 'Energy drawn from the wheel', dual ? 'E = 2 × E_ball ÷ (1 + k)  (bottom wheel share)' : 'E = 2 × E_ball  (slip wastes about as much as the ball gets)', '2 × ' + f(dt.keLinJ + dt.keRotJ, 3) + (dual ? ' × ' + f(dt.share, 2) : ''), f(m.shotEnergyJ, 3) + ' J');
+      eq(s3, 'Wheel speed before the shot', 'ω₀ = n_wheel × 2π ÷ 60', f(m.wheelRpm, 0) + ' × 2π ÷ 60', f(dt.w0, 1) + ' rad/s');
+      eq(s3, 'Right after the shot', 'ω₁ = √(ω₀² − 2E ÷ I)', '√(' + f(dt.w0, 1) + '² − 2 × ' + f(m.shotEnergyJ, 3) + ' ÷ ' + sci(dt.inertiaKgM2) + ')', f(dt.w1, 1) + ' rad/s');
+      eq(s3, 'Speed dip', 'dip = 1 − ω₁ ÷ ω₀', '1 − ' + f(dt.w1, 1) + ' ÷ ' + f(dt.w0, 1), pct(m.dip, 2));
+      eq(s3, 'Stall torque at the wheel', 'T = motors × T_stall × (V ÷ 12) ÷ G', f(dt.motorsPerWheel, 0) + ' × ' + f(dt.stallTorqueListedNm, 4) + ' N·m × (' + f(sh.batteryV, 1) + ' ÷ 12) ÷ ' + f(dt.gear, 2), f(dt.wheelStallTorqueNm, 4) + ' N·m');
+      eq(s3, 'Time constant', 'τ = I × ω_free ÷ T', sci(dt.inertiaKgM2) + ' × ' + f(dt.wFree, 1) + ' ÷ ' + f(dt.wheelStallTorqueNm, 4), f(m.tauS, 3) + ' s');
+      if (pid) {
+        eq(s3, 'Back to speed (full power)', 't = τ × ln((ω_free − ω₁) ÷ (ω_free − ω₀))', f(m.tauS, 3) + ' × ln((' + f(dt.wFree, 1) + ' − ' + f(dt.w1, 1) + ') ÷ (' + f(dt.wFree, 1) + ' − ' + f(dt.w0, 1) + '))', ms(m.recoveryMs));
+      } else {
+        eq(s3, 'Back within 1% (no boost)', 't = τ × ln(dip ÷ 1%)', f(m.tauS, 3) + ' × ln(' + pct(m.dip, 2) + ' ÷ 1%)', ms(m.recoveryMs));
+      }
+      eq(s3, 'Still missing at the next shot', pid ? 'ω(Δt) = ω_free − (ω_free − ω₁)·e^(−Δt/τ), capped at ω₀' : 'leftover = dip × e^(−Δt/τ)', 'Δt = ' + f(dt.shotInterval, 2) + ' s', pct(m.residual, 2));
+      eq(s3, 'Speed scatter from recovery', 'σ_recovery = leftover ÷ 2', pct(m.residual, 2) + ' ÷ 2', '±' + pct(m.sigmaRecovery, 2));
+
+      var s4 = sec('4 · What changing the wheel changes', ['A wheel changes two numbers here. ', { b: 'Diameter' }, ' sets how many rpm the same surface speed takes (bigger wheel = fewer rpm = more headroom). ', { b: 'Mass' }, ' sets the flywheel inertia (heavier = smaller dip per shot, but slower spin-up and slower recovery). Grip and softness are not modeled per wheel; the exit-efficiency slider covers them. Same motor, gearing, ' + fi.n + ' wheel' + (fi.n > 1 ? 's' : '') + ' per shaft and extra flywheel as now:']);
+      var wrap = document.createElement('div');
+      wrap.className = 'table-wrap math-table';
+      var tbl = document.createElement('table');
+      var thead = document.createElement('thead'), trh = document.createElement('tr');
+      ['Wheel', 'Diameter', 'Mass', 'Shaft inertia', 'Wheel rpm', 'Motor use', 'Dip / shot', 'Back to speed'].forEach(function (t) {
+        var thc = document.createElement('th'); thc.scope = 'col'; thc.textContent = t; trh.appendChild(thc);
+      });
+      thead.appendChild(trh); tbl.appendChild(thead);
+      var tb = document.createElement('tbody');
+      SH.wheels.forEach(function (w) {
+        var I = flywheelInertia(s, w.id).total;
+        var mm = E.motorModel(p.motorId, Object.assign({}, sh, { wheelDiameterMm: w.diameterMm, inertiaKgM2: I }), p.ballId, v);
+        var tr = document.createElement('tr');
+        if (w.id === s.wheelId) tr.className = 'sel';
+        [w.label, f(w.diameterMm, 0) + ' mm', f(w.massG, 0) + ' g', sci(I), f(mm.wheelRpm, 0), pct(mm.headroom), pct(mm.dip, 1), ms(mm.recoveryMs)].forEach(function (t) {
+          var td = document.createElement('td'); td.textContent = t; tr.appendChild(td);
+        });
+        tb.appendChild(tr);
+      });
+      tbl.appendChild(tb); wrap.appendChild(tbl); s4.appendChild(wrap);
+      note(s4, 'Wheel inertias are estimates from goBILDA listed masses (±25%). The 82 mm and 60 mm steel flywheels use goBILDA published inertia.');
+    }
+
+    var area = bp.areaM2, weight = bp.massKg * A.g;
+    var s5 = sec('5 · Ball flight', ['The path is solved step by step (every 2.5 ms) with gravity, air drag and backspin lift. A shot only counts if the ball goes through the CELL mouth without touching the rim, the frame, another CELL, a wall or the floor.']);
+    eq(s5, 'Ball', 'A = π r²', bp.label + ': ' + f(bp.Din, 2) + ' in, ' + f(bp.massKg * 1000, 1) + ' g', f(area * 1e4, 1) + ' cm²');
+    if (b) {
+      var v0 = b.v, th = b.thetaDeg * DEG, S0 = m ? m.S0 : 1;
+      var FD = 0.5 * A.rho * A.cd * area * v0 * v0, CL = A.clSlope * Math.min(S0, A.clSMax), FL = 0.5 * A.rho * CL * area * v0 * v0;
+      eq(s5, 'Drag at launch', 'F_D = ½ ρ C_D A v²', '½ × ' + f(A.rho, 2) + ' × ' + f(A.cd, 2) + ' × ' + f(area, 5) + ' × ' + f(v0, 2) + '²', f(FD, 3) + ' N (' + f(FD / weight, 2) + ' × ball weight)');
+      eq(s5, 'Backspin lift at launch', 'F_L = ½ ρ C_L A v²,  C_L = 0.20 × min(S, 1)', 'S = ' + f(S0, 2) + ' → C_L ' + f(CL, 2), f(FL, 3) + ' N (' + f(FL / weight, 2) + ' × ball weight)');
+      eq(s5, 'Launch', 'v_x = v cos θ,  v_z = v sin θ', f(v0, 2) + ' m/s at ' + f(b.thetaDeg, 1) + '°', f(v0 * Math.cos(th), 2) + ' and ' + f(v0 * Math.sin(th), 2) + ' m/s');
+      var rise = Math.pow(v0 * Math.sin(th), 2) / (2 * A.g) / 0.0254;
+      eq(s5, 'Apex', 'no air: h₀ + v_z² ÷ 2g   ·   with air: simulated', f(p.h0, 0) + ' + ' + f(rise, 1) + ' = ' + f(p.h0 + rise, 1) + ' in without air', f(b.apexIn, 1) + ' in with air');
+      if (b.tToCell != null) eq(s5, 'Into the CELL', 'simulated', 'after ' + f(b.tToCell, 2) + ' s', 'entering at ' + f(b.entrySpeed, 2) + ' m/s');
+    }
+
+    var sg = r.sigma || {}, pr = SH.precision[state.precision];
+    var s6 = sec('6 · Hit rate and verdict', ['No robot shoots the same way twice. Each shot is scattered by random errors, and the hit rate is the share of those shots that still go in.']);
+    eq(s6, 'Aim scatter (' + pr.label + ')', 'σ_angle, σ_aim', '', '±' + f(sg.thetaDeg, 1) + '° angle, ±' + f(sg.yawDeg, 1) + '° aim');
+    if (sg.v != null) eq(s6, 'Speed scatter', 'σ_v = √(σ_shots² + σ_motor² + σ_recovery²)', '√(' + pct(sg.shooter, 2) + '² + ' + pct(sg.motor, 2) + '² + ' + pct(sg.recovery, 2) + '²)', '±' + pct(sg.v, 2));
+    if (b) {
+      var wn = b.windows;
+      eq(s6, 'Scoring window at the best aim', 'range that still scores, others held at best', f(wn.thetaDeg[0], 1) + '–' + f(wn.thetaDeg[1], 1) + '° · ' + f(wn.v[0], 2) + '–' + f(wn.v[1], 2) + ' m/s');
+    }
+    eq(s6, 'Hit rate', 'share of scattered shots that score', '', pct(r.hitRate, 0));
+    eq(s6, 'Verdict', '≥ 80% (and PID under 92% speed) → POSSIBLE · 40–80% → NOT CONSISTENT · under 40%, no arc, or too slow → WON’T WORK', '', r.verdict);
+  }
+
+  $('mathBtn').addEventListener('click', function () {
+    renderMath();
+    if (typeof mathDialog.showModal === 'function') mathDialog.showModal(); else mathDialog.setAttribute('open', '');
+  });
+  $('mathClose').addEventListener('click', function () { if (mathDialog.close) mathDialog.close(); else mathDialog.removeAttribute('open'); });
+  mathDialog.addEventListener('click', function (e) { if (e.target === mathDialog && mathDialog.close) mathDialog.close(); });
 
   // ------------------------------------------------------------------ theme + resize
   function themeChanged() { readPalette(); drawField(); drawSide(); three.rebuild(); if (current) renderVerdict(current); }

@@ -157,7 +157,10 @@
       downgrade: num(m.downgradeHeadroom, 0.92),
       thPossible: m.thresholds ? num(m.thresholds.possible, 0.8) : 0.8,
       thMid: m.thresholds ? num(m.thresholds.notConsistent, 0.4) : 0.4,
-      freeSpeedFactor: num(m.freeSpeedFactor, 1.0)
+      freeSpeedFactor: num(m.freeSpeedFactor, 1.0),
+      ratedV: num(m.ratedV, 12),
+      batteryV: num(m.batteryV, 12),
+      openLoopSwingV: num(m.openLoopSwingV, 1.2)
     };
     var ae = data.shooter.aero || {};
     S.aero = {
@@ -527,7 +530,9 @@
       inertiaKgM2: I,
       shotInterval: clamp(num(sh.shotInterval, num(def.shotInterval, 0.5)), 0.01, 60),
       etaSingle: clamp(num(sh.etaSingle, S.model.etaSingle), 0.01, 1),
-      etaDual: clamp(num(sh.etaDual, S.model.etaDual), 0.01, 1.5)
+      etaDual: clamp(num(sh.etaDual, S.model.etaDual), 0.01, 1.5),
+      batteryV: clamp(num(sh.batteryV, S.model.batteryV), 9, 15),
+      control: sh.control === 'power' ? 'power' : 'pid'
     };
   }
 
@@ -588,7 +593,8 @@
     var M = S.model;
     var fx = exitFactor(sh);
     var D = sh.wheelDiameterMm / 1000;
-    var free = mo.freeRpm * M.freeSpeedFactor;
+    var vf = sh.batteryV / M.ratedV;                          // DC motor: free speed and stall torque scale with voltage
+    var free = mo.freeRpm * M.freeSpeedFactor * vf;           // highest motor rpm this battery can reach, PID or not
     var vWheel = vExit / fx;
     var nW = vWheel / (Math.PI * D) * 60;
     var nM = nW / sh.gear;
@@ -598,23 +604,44 @@
     var I = sh.inertiaKgM2;
     var w0 = nW * 2 * Math.PI / 60;
     var wwf = free * sh.gear * 2 * Math.PI / 60;
-    var Tws = sh.motorsPerWheel * mo.stallTorqueNm / sh.gear;
+    var Tstall = mo.stallTorqueNm * vf;
+    var Tws = sh.motorsPerWheel * Tstall / sh.gear;
     var tau = I * wwf / Tws;
     var share = sh.type === 'dual' ? 1 / (1 + sh.topRatio) : 1;
     var rM = bp.rIn * IN_M;
     var spinW = S0 * vExit / rM;
-    var E = M.lossFactor * (0.5 * bp.massKg * vExit * vExit + 0.5 * bp.I * spinW * spinW) * share;
+    var keLin = 0.5 * bp.massKg * vExit * vExit, keRot = 0.5 * bp.I * spinW * spinW;
+    var E = M.lossFactor * (keLin + keRot) * share;
     var w1 = Math.sqrt(Math.max(0, w0 * w0 - 2 * E / I));
     var dip = w0 > 0 ? 1 - w1 / w0 : 0;
-    var rec = w0 < wwf ? tau * Math.log((wwf - w1) / (wwf - w0)) : Infinity;
-    var wdt = wwf - (wwf - w1) * Math.exp(-sh.shotInterval / tau);
-    var residual = w0 > 0 ? Math.max(0, 1 - wdt / w0) : 0;
-    var spin = w0 < wwf ? tau * Math.log(wwf / (wwf - w0)) : Infinity;
+    var dt = sh.shotInterval, rec, wdt, residual, spin, sigM;
+    if (sh.control === 'pid') {
+      // PID drives the motor at full battery voltage until it is back at the setpoint
+      rec = w0 < wwf ? tau * Math.log((wwf - w1) / (wwf - w0)) : Infinity;
+      wdt = Math.min(w0, wwf - (wwf - w1) * Math.exp(-dt / tau));
+      residual = w0 > 0 ? Math.max(0, 1 - wdt / w0) : 0;
+      spin = w0 < wwf ? tau * Math.log(wwf / (wwf - w0)) : Infinity;
+      sigM = sigmaMotorOf(h);
+    } else {
+      // fixed power: the motor creeps back toward the speed that power level gives (same time constant, no boost)
+      rec = dip > 0.01 ? tau * Math.log(dip / 0.01) : 0;       // back to within 1 %
+      residual = dip * Math.exp(-dt / tau);
+      wdt = w0 * (1 - residual);
+      spin = h <= 1 ? tau * Math.log(100) : Infinity;          // to within 1 %
+      sigM = h <= 1 ? (M.openLoopSwingV / sh.batteryV) / Math.sqrt(12) : M.sm.s2;
+    }
     return {
       motorId: mo.id, label: mo.label, freeRpm: mo.freeRpm, usableFreeRpm: free,
       vExit: vExit, wheelRpm: nW, motorRpm: nM, headroom: h, reachable: h <= 1, vCap: vCap, S0: S0,
       dip: dip, recoveryMs: rec * 1000, spinUpMs: spin * 1000, residual: residual,
-      sigmaMotor: sigmaMotorOf(h), sigmaRecovery: residual / 2, tauS: tau, shotEnergyJ: E
+      sigmaMotor: sigM, sigmaRecovery: residual / 2, tauS: tau, shotEnergyJ: E, control: sh.control, batteryV: sh.batteryV,
+      details: {
+        exitFactor: fx, wheelDiameterM: D, vWheel: vWheel, voltageFactor: vf, freeSpeedFactor: M.freeSpeedFactor,
+        stallTorqueNm: Tstall, stallTorqueListedNm: mo.stallTorqueNm, wheelStallTorqueNm: Tws, inertiaKgM2: I,
+        w0: w0, wFree: wwf, w1: w1, wAfterInterval: wdt, keLinJ: keLin, keRotJ: keRot, lossFactor: M.lossFactor, share: share,
+        spinRadS: spinW, shotInterval: dt, motorsPerWheel: sh.motorsPerWheel, gear: sh.gear, topRatio: sh.topRatio, type: sh.type,
+        etaSingle: sh.etaSingle, etaDual: sh.etaDual, openLoopSwingV: M.openLoopSwingV, sigmaRule: M.sm
+      }
     };
   }
 
@@ -1351,7 +1378,7 @@
     var rp = Math.floor(rate * 100 + 1e-9), hp = Math.ceil(h * 100 - 1e-9), room = Math.max(0, Math.round((1 - h) * 100));
     var d = { windows: w, tight: tight };
     if (rate >= M.thPossible) {
-      if (h > M.downgrade) {
+      if (h > M.downgrade && sel.mc.control === 'pid') {
         d.verdict = VERDICT.MID; d.code = 'LOW_HEADROOM';
         d.reason = 'Scores ' + rp + '% of shots, but the motor runs at ' + hp + '% of free speed — no headroom as the battery drains';
       } else {
@@ -1360,7 +1387,7 @@
       }
     } else if (rate >= M.thMid) {
       d.verdict = VERDICT.MID; d.code = 'MISSES_OFTEN';
-      d.reason = 'Scores ' + rp + '% of shots — ' + tight.text + (h > M.downgrade ? '; the motor is also at ' + hp + '% of free speed' : '');
+      d.reason = 'Scores ' + rp + '% of shots — ' + tight.text + (h > M.downgrade && sel.mc.control === 'pid' ? '; the motor is also at ' + hp + '% of free speed' : '');
     } else {
       d.verdict = VERDICT.BAD; d.code = 'RARELY_SCORES';
       d.reason = 'Only ' + rp + '% of shots score — ' + tight.text;
@@ -1575,6 +1602,7 @@
     scanPoints: scanPoints,
     sideView: sideView,
     CAUSES: CAUSE_NAMES.slice(1),
+    constants: function () { need(); return { aero: Object.assign({}, S.aero), model: JSON.parse(JSON.stringify(S.model)) }; },
     VERDICTS: [VERDICT.OK, VERDICT.MID, VERDICT.BAD],
     _internal: {
       erf: erf, Phi: Phi, worldToBody: worldToBody, bodyToWorld: bodyToWorld,
