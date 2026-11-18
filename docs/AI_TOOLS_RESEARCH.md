@@ -25,12 +25,18 @@ How to read the labels:
 
 1. Before each Pages deploy, check that `dist/` doesn't ship source maps or unused vendor code.
 
-## Status on the dev PC (2026-11-17)
+## Status on the dev PC (updated 2026-11-17)
 
-- **Installed:** the agent skills `cli-hub-meta-skill` and `reverse-engineer-anything`, plus `cli-anything-hub` 0.4.1 (pip).
-- **Not usable yet:**
-  - The REA CLI/MCP needs Node 24.22.1 or newer, and the PC has 24.15.0.
-  - The FreeCAD/Blender harnesses need those programs installed. Neither is.
+- **Installed and working:**
+  - Agent skills `cli-hub-meta-skill` and `reverse-engineer-anything`.
+  - `cli-anything-hub` 0.4.1.
+  - Node 24.22.1.
+  - REA 6.9.0 (global `rea`), registered as an MCP server in Claude Code. `rea doctor` reports it healthy.
+  - FreeCAD 1.1.4, with the `cli-anything-freecad` harness (`FREECAD_PATH` points at `FreeCADCmd.exe`).
+- **Smoke-tested:**
+  - REA's JS analysis of the shot-sim build.
+  - A FreeCAD cube built and measured (volume and center of mass correct), then exported to STEP through headless FreeCAD.
+- **Not installed:** REA's optional engines (Ghidra, IDA, JADX/JDK 17+, Kuna), adb, and Blender.
 
 ## Rules for REA
 
